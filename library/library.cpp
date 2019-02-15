@@ -7,6 +7,7 @@
 #include "../includes_usr/library.h"
 #include "../includes_usr/datastructures.h"
 #include "../includes_usr/fileIO.h"
+#include "../includes_usr/constants.h"
 using namespace std;
 
 //NOTE: please ensure patron and book data are loaded from disk before calling the following
