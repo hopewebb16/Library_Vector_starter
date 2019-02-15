@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include<cstring>
+#include <cstring>
 
 #include "../includes_usr/library.h"
 #include "../includes_usr/datastructures.h"
@@ -99,20 +99,30 @@ int checkout(int bookid, int patronid){
  * 		   BOOK_NOT_IN_COLLECTION
  */
 int checkin(int bookid){
-	return SUCCESS;
-}
+	reloadAllData();
 
-/*
- * enroll a patron, duplicate names are fine as patrons are uniquely identified by their patronid
- * first load books and patrons from disk
- * create a patron object, initialize its fields as appropriate, assign him/her the nextPatronID
- * then push the patron onto the patrons container
- * save all changes to the patrons container to disk
- * return 
- *    the patron_id of the person added
- */
-int enroll(std::string &name){
-	return 0;
+	bool foundBook = false;
+
+	for (int i = 0; books.size(); i++) {
+		if (books[i].book_id == bookid){
+			foundBook = true;
+		}
+	}
+
+	if (foundBook == false) {
+		return BOOK_NOT_IN_COLLECTION;
+	}
+
+	int id = books[bookid].loaned_to_patron_id;
+	patrons[id].number_books_checked_out--;
+	books[bookid].loaned_to_patron_id = NO_ONE;
+	books[bookid].state = IN
+
+	saveBooks(books,BOOKFILE.c_str());
+	savePatrons(patrons, PATRONFILE.c_str());
+
+	return SUCCESS;
+
 }
 
 /*
@@ -121,7 +131,7 @@ int enroll(std::string &name){
  * 
  */
 int numbBooks(){
-	return 0;
+	return books.size();
 }
 
 /*
@@ -129,7 +139,29 @@ int numbBooks(){
  * (ie. if 3 patrons returns 3)
  */
 int numbPatrons(){
-	return 0;
+	return patrons.size();
+}
+
+/*
+ * enroll a patron, duplicate names are fine as patrons are uniquely identified by their patronid
+ * first load books and patrons from disk
+ * create a patron object, initialize its fields as appropriate, assign him/her the nextPatronID
+ * then push the patron onto the patrons container
+ * save all changes to the patrons container to disk
+ * return
+ *    the patron_id of the person added
+ */
+int enroll(std::string &name){
+	reloadAllData();
+
+	patron randPatron;
+	randPatron.name = name;
+	randPatron.patron_id = numbPatrons();
+	patrons.push_back(randPatron);
+
+	saveBooks(books,BOOKFILE.c_str());
+	savePatrons(patrons, PATRONFILE.c_str());
+	return randPatron.patron_id;
 }
 
 /*the number of books patron has checked out
@@ -138,7 +170,14 @@ int numbPatrons(){
  *        or PATRON_NOT_ENROLLED         
  */
 int howmanybooksdoesPatronHaveCheckedOut(int patronid){
-	return 0;
+	int numBooks = 0;
+	for (int i =0; i < patrons.size(); i++) {
+		if (patronid == patrons[i].patron_id){
+			numBooks = patrons[i].number_books_checked_out;
+			return numBooks;
+		}
+	}
+	return PATRON_NOT_ENROLLED;
 }
 
 /* search through patrons container to see if patronid is there
@@ -148,6 +187,13 @@ int howmanybooksdoesPatronHaveCheckedOut(int patronid){
  *         PATRON_NOT_ENROLLED no patron with this patronid
  */
 int whatIsPatronName(std::string &name,int patronid){
-	return SUCCESS;
+	for (int i =0; i < patrons.size(); i++) {
+			if (patronid == patrons[i].patron_id){
+				name = patrons[i].name;
+				return SUCCESS;
+			}
+		}
+		return PATRON_NOT_ENROLLED;
+	}
 }
 
