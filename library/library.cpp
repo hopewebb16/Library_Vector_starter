@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <time.h>
 #include <iostream>
+#include <string>
+#include <vector>
+#include<cstring>
 
 #include "../includes_usr/library.h"
 #include "../includes_usr/datastructures.h"
@@ -13,13 +16,17 @@ using namespace std;
 //NOTE: please ensure patron and book data are loaded from disk before calling the following
 //NOTE: also make sure you save patron and book data to disk any time you make a change to them
 //NOTE: for files where data is stored see constants.h BOOKFILE and PATRONFILE
-
+vector<book> books;
+vector<patron> patrons;
 /*
  * clear books and patrons containers
  * then reload them from disk 
  */
 void reloadAllData(){
-
+	books.clear();
+	patrons.clear();
+	loadBooks(books, BOOKFILE.c_str());
+	loadPatrons(patrons, PATRONFILE.c_str());
 }
 
 /* checkout a book to a patron
@@ -43,6 +50,39 @@ void reloadAllData(){
  *         TOO_MANY_OUT patron has the max number of books allowed checked out
  */
 int checkout(int bookid, int patronid){
+	reloadAllData();
+
+	bool enrolledID = false;
+	bool haveBook = false;
+	patron knownPatron;
+	book knownBook;
+
+	for (int i = 0; i < patrons.size(); i++) {
+		if (patrons[i].patron_id == patronid) {
+			enrolledID = true;
+		}
+	}
+	for (int i = 0; books.size(); i++) {
+		if (books[i].book_id == bookid){
+			haveBook = true;
+		}
+	}
+	if (enrolledID == false) {
+		return PATRON_NOT_ENROLLED;
+	}
+	if (haveBook == false) {
+		return BOOK_NOT_IN_COLLECTION;
+	}
+	if (patrons[patronid].number_books_checked_out == MAX_BOOKS_ALLOWED_OUT) {
+		return TOO_MANY_OUT;
+	}
+
+	books[bookid].state = OUT;
+	books[bookid].loaned_to_patron_id = patronid;
+	patrons[patronid].number_books_checked_out++;
+	saveBooks(books,BOOKFILE.c_str());
+	savePatrons(patrons, PATRONFILE.c_str());
+
 	return SUCCESS;
 }
 
