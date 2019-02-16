@@ -4,20 +4,21 @@
 #include <time.h>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <cstring>
 
 #include "../includes_usr/library.h"
 #include "../includes_usr/datastructures.h"
 #include "../includes_usr/fileIO.h"
-#include "../includes_usr/constants.h"
+
 using namespace std;
 
 //NOTE: please ensure patron and book data are loaded from disk before calling the following
 //NOTE: also make sure you save patron and book data to disk any time you make a change to them
 //NOTE: for files where data is stored see constants.h BOOKFILE and PATRONFILE
+
 vector<book> books;
 vector<patron> patrons;
+
 /*
  * clear books and patrons containers
  * then reload them from disk 
@@ -25,7 +26,7 @@ vector<patron> patrons;
 void reloadAllData(){
 	books.clear();
 	patrons.clear();
-	loadBooks(books, BOOKFILE.c_str());
+	loadBooks(books, BOOKFILE.c_str() );
 	loadPatrons(patrons, PATRONFILE.c_str());
 }
 
@@ -62,20 +63,24 @@ int checkout(int bookid, int patronid){
 			enrolledID = true;
 		}
 	}
-	for (int i = 0; books.size(); i++) {
+
+	if (enrolledID == false) {
+			return PATRON_NOT_ENROLLED;
+	}
+
+	for (int i = 0; i < books.size(); i++) {
 		if (books[i].book_id == bookid){
 			haveBook = true;
 		}
 	}
-	if (enrolledID == false) {
-		return PATRON_NOT_ENROLLED;
-	}
 	if (haveBook == false) {
 		return BOOK_NOT_IN_COLLECTION;
 	}
+
 	if (patrons[patronid].number_books_checked_out == MAX_BOOKS_ALLOWED_OUT) {
-		return TOO_MANY_OUT;
-	}
+			return TOO_MANY_OUT;
+		}
+
 
 	books[bookid].state = OUT;
 	books[bookid].loaned_to_patron_id = patronid;
@@ -100,15 +105,14 @@ int checkout(int bookid, int patronid){
  */
 int checkin(int bookid){
 	reloadAllData();
-
+	int count = 0;
 	bool foundBook = false;
-
-	for (int i = 0; books.size(); i++) {
+	for (int i = 0; i < books.size(); i++) {
 		if (books[i].book_id == bookid){
 			foundBook = true;
+			count = i;
 		}
 	}
-
 	if (foundBook == false) {
 		return BOOK_NOT_IN_COLLECTION;
 	}
@@ -116,7 +120,7 @@ int checkin(int bookid){
 	int id = books[bookid].loaned_to_patron_id;
 	patrons[id].number_books_checked_out--;
 	books[bookid].loaned_to_patron_id = NO_ONE;
-	books[bookid].state = IN
+	books[bookid].state = IN;
 
 	saveBooks(books,BOOKFILE.c_str());
 	savePatrons(patrons, PATRONFILE.c_str());
@@ -131,6 +135,10 @@ int checkin(int bookid){
  * 
  */
 int numbBooks(){
+	reloadAllData();
+	if (books.empty()){
+		return 0;
+	}
 	return books.size();
 }
 
@@ -138,7 +146,12 @@ int numbBooks(){
  * the number of patrons in the patrons container
  * (ie. if 3 patrons returns 3)
  */
+
 int numbPatrons(){
+	loadPatrons(patrons, PATRONFILE.c_str());
+	if (patrons.empty()){
+		return 0;
+	}
 	return patrons.size();
 }
 
@@ -159,8 +172,8 @@ int enroll(std::string &name){
 	randPatron.patron_id = numbPatrons();
 	patrons.push_back(randPatron);
 
-	saveBooks(books,BOOKFILE.c_str());
 	savePatrons(patrons, PATRONFILE.c_str());
+
 	return randPatron.patron_id;
 }
 
@@ -171,12 +184,14 @@ int enroll(std::string &name){
  */
 int howmanybooksdoesPatronHaveCheckedOut(int patronid){
 	int numBooks = 0;
+
 	for (int i =0; i < patrons.size(); i++) {
 		if (patronid == patrons[i].patron_id){
 			numBooks = patrons[i].number_books_checked_out;
 			return numBooks;
 		}
 	}
+
 	return PATRON_NOT_ENROLLED;
 }
 
@@ -187,13 +202,14 @@ int howmanybooksdoesPatronHaveCheckedOut(int patronid){
  *         PATRON_NOT_ENROLLED no patron with this patronid
  */
 int whatIsPatronName(std::string &name,int patronid){
+
 	for (int i =0; i < patrons.size(); i++) {
-			if (patronid == patrons[i].patron_id){
-				name = patrons[i].name;
-				return SUCCESS;
-			}
+		if (patronid == patrons[i].patron_id){
+			name = patrons[i].name;
+			return SUCCESS;
 		}
-		return PATRON_NOT_ENROLLED;
 	}
+	return PATRON_NOT_ENROLLED;
 }
+
 

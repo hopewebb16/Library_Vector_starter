@@ -14,14 +14,12 @@ using namespace std;
  * */
 int loadBooks(std::vector<book> &books, const char* filename)
 {
-	int count = 0;
-	int count2 = 0;
-	ifstream myfile;
-	vector<string> tempVector;
-	book tempBook;
+	books.clear();
 
+	ifstream myfile;
 	myfile.open(filename);
 	string line;
+
 	if(!myfile.is_open()){
 		return COULD_NOT_OPEN_FILE;
 	}
@@ -29,16 +27,19 @@ int loadBooks(std::vector<book> &books, const char* filename)
 	while(getline(myfile,line)){
 		istringstream lineStream(line);
 		string space;
+		vector<string> tempVector;
+		book tempBook;
+
 		while (getline(lineStream, space,',')){
-			tempVector.at(count)=line;
-			count++;
+			tempVector.push_back(space);
 		}
+
 		tempBook.book_id= stoi(tempVector[0]);
-		tempBook.author = tempVector[1];
+		tempBook.title=tempVector[1];
+		tempBook.author = tempVector[2];
 		tempBook.state = (book_checkout_state) stoi(tempVector[3]);
 		tempBook.loaned_to_patron_id = stoi(tempVector[4]);
-		books.at(count2)= tempBook;
-		count2++;
+		books.push_back(tempBook);
 	}
 
 	if (books.empty()){
@@ -69,7 +70,8 @@ int saveBooks(std::vector<book> &books, const char* filename)
 	}
 	std::vector<book>::iterator it;
 	for (it = books.begin(); it != books.end(); it++){
-		 myfile << (*it).book_id <<"," << (*it).title << "," << (*it).author << "," << (*it).state << "," << (*it).loaned_to_patron_id << endl;
+		 myfile << (*it).book_id <<"," << (*it).title << "," << (*it).author << "," << (*it).state << "," << (*it).loaned_to_patron_id;
+		 myfile << endl;
 	}
 	myfile.close();
 	return SUCCESS;
@@ -84,30 +86,30 @@ int loadPatrons(std::vector<patron> &patrons, const char* filename)
 {
 	patrons.clear();
 
-	int count = 0;
-	int count2 = 0;
 	ifstream myfile;
-	vector<string> tempVector;
-	patron tempPatron;
-
 	myfile.open(filename);
-	string line;
+
 	if(!myfile.is_open()){
 		return COULD_NOT_OPEN_FILE;
 	}
 
+	string line;
+
+
 	while(getline(myfile,line)){
 		istringstream lineStream(line);
 		string space;
+		vector<string> tempVector;
+		patron tempPatron;
+
 		while (getline(lineStream, space,',')){
-			tempVector.at(count)=line;
-			count++;
+			tempVector.push_back(space);
 		}
+
 		tempPatron.patron_id= stoi(tempVector[0]);
 		tempPatron.name = tempVector[1];
-		tempPatron.number_books_checked_out = (book_checkout_state) stoi(tempVector[3]);
-		patrons.at(count2)= tempPatron;
-		count2++;
+		tempPatron.number_books_checked_out = stoi(tempVector[2]);
+		patrons.push_back(tempPatron);
 	}
 
 	if (patrons.empty()){
@@ -115,7 +117,7 @@ int loadPatrons(std::vector<patron> &patrons, const char* filename)
 		return NO_PATRONS_IN_LIBRARY;
 	}
 
-	myfile.close();
+
 	return SUCCESS;
 }
 
@@ -136,9 +138,11 @@ int savePatrons(std::vector<patron> &patrons, const char* filename)
 		myfile.close();
 		return NO_BOOKS_IN_LIBRARY;
 	}
-	std::vector<book>::iterator it;
+
+	std::vector<patron>::iterator it;
 	for (it = patrons.begin(); it != patrons.end(); it++){
-		 myfile << (*it).patron_id << "," << (*it).name << "," << (*it).number_books_checked_out << endl;
+		 myfile << (*it).patron_id << "," << (*it).name << "," << (*it).number_books_checked_out ;
+		 myfile << endl;
 
 	}
 	myfile.close();
